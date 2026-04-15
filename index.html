@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Línea del tiempo - Exconvento</title>
+<title>Línea del tiempo</title>
 
 <style>
 body{
@@ -14,21 +14,25 @@ body{
   margin:0;
 }
 
+h2{
+  font-size:20px;
+}
+
 #board{
   display:flex;
   flex-wrap:wrap;
   justify-content:center;
-  gap:12px;
-  margin:15px;
+  gap:10px;
+  margin:10px;
 }
 
 .card{
-  width:140px;
+  width:45%;
+  max-width:160px;
   background:#1c1c26;
   border-radius:12px;
-  padding:8px;
+  padding:6px;
   cursor:pointer;
-  transition:0.2s;
 }
 
 .card.selected{
@@ -37,27 +41,27 @@ body{
 
 .card img{
   width:100%;
-  height:100px;
+  height:110px;
   object-fit:cover;
   border-radius:8px;
 }
 
 .caption{
-  margin-top:5px;
   font-size:12px;
 }
 
 #timeline{
   display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  gap:12px;
+  flex-direction:column;
+  gap:10px;
   margin:20px;
 }
 
 .slot{
-  width:140px;
-  height:160px;
+  width:90%;
+  max-width:300px;
+  height:150px;
+  margin:auto;
   border:2px dashed #666;
   border-radius:12px;
   display:flex;
@@ -67,7 +71,6 @@ body{
 
 .correct{
   color:#00ffb3;
-  font-weight:bold;
 }
 
 .incorrect{
@@ -75,13 +78,11 @@ body{
 }
 
 button{
-  padding:10px 20px;
+  padding:12px;
+  font-size:16px;
+  background:#d4af37;
   border:none;
   border-radius:8px;
-  background:#d4af37;
-  color:black;
-  cursor:pointer;
-  font-size:16px;
 }
 </style>
 </head>
@@ -105,7 +106,6 @@ button{
 
 <script>
 
-// 🔥 DATOS REALES (los tuyos)
 let data = [
   {img:'img1.jpg', year:'1861', titulo:'Exconvento como hospital municipal y otros usos estatales'},
   {img:'img2.jpg', year:'1880', titulo:'Fotografía del exconvento de Alfred Briquet'},
@@ -114,7 +114,6 @@ let data = [
   {img:'img5.jpg', year:'2000', titulo:'50 Aniversario de la Fototeca Nacional'}
 ];
 
-// mezclar
 data.sort(()=>Math.random()-0.5);
 
 const board = document.getElementById("board");
@@ -133,39 +132,17 @@ data.forEach(item=>{
     <div class="caption">${item.titulo}</div>
   `;
 
-  // 📱 seleccionar con toque
   card.addEventListener("click", ()=>{
     document.querySelectorAll(".card").forEach(c=>c.classList.remove("selected"));
     card.classList.add("selected");
     selected = card;
   });
 
-  // 💻 drag
-  card.draggable=true;
-  card.addEventListener("dragstart", e=>{
-    e.dataTransfer.setData("html", card.outerHTML);
-    setTimeout(()=>card.remove(),0);
-  });
-
   board.appendChild(card);
 });
 
-// slots
+// colocar en slots
 slots.forEach(slot=>{
-
-  // drag
-  slot.addEventListener("dragover", e=>e.preventDefault());
-
-  slot.addEventListener("drop", e=>{
-    e.preventDefault();
-    if(slot.children.length>0) return;
-
-    let html = e.dataTransfer.getData("html");
-    slot.innerHTML = html;
-    activarEventos(slot.firstChild);
-  });
-
-  // touch
   slot.addEventListener("click", ()=>{
     if(selected && slot.children.length===0){
       slot.appendChild(selected);
@@ -173,51 +150,37 @@ slots.forEach(slot=>{
       selected = null;
     }
   });
-
 });
 
-// reactivar eventos
-function activarEventos(card){
-
-  card.addEventListener("click", ()=>{
-    document.querySelectorAll(".card").forEach(c=>c.classList.remove("selected"));
-    card.classList.add("selected");
-    selected = card;
-  });
-
-  card.draggable=true;
-  card.addEventListener("dragstart", e=>{
-    e.dataTransfer.setData("html", card.outerHTML);
-    setTimeout(()=>card.remove(),0);
-  });
-}
-
-// verificar
+// 🔥 VALIDACIÓN CORRECTA
 function verificar(){
 
-  let orden = Array.from(slots).map(s=>{
-    let card = s.querySelector(".card");
-    return card ? parseInt(card.dataset.year) : 0;
-  });
+  let cards = Array.from(slots).map(s=>s.querySelector(".card"));
+
+  // 🚨 si faltan piezas → error
+  if(cards.includes(null)){
+    alert("⚠️ Coloca todas las imágenes primero");
+    return;
+  }
+
+  let years = cards.map(c=>parseInt(c.dataset.year));
 
   let correct = true;
 
-  for(let i=0;i<orden.length-1;i++){
-    if(orden[i] > orden[i+1]){
+  for(let i=0;i<years.length-1;i++){
+    if(years[i] > years[i+1]){
       correct = false;
     }
   }
 
-  slots.forEach(s=>{
+  slots.forEach((s,i)=>{
     let card = s.querySelector(".card");
-    if(card){
-      card.classList.remove("correct","incorrect");
-      card.classList.add(correct ? "correct" : "incorrect");
 
-      // mostrar años SOLO si está correcto
-      if(correct){
-        card.querySelector(".caption").innerHTML = card.dataset.year;
-      }
+    card.classList.remove("correct","incorrect");
+    card.classList.add(correct ? "correct" : "incorrect");
+
+    if(correct){
+      card.querySelector(".caption").innerHTML = card.dataset.year;
     }
   });
 
