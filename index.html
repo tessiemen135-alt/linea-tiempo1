@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Línea del tiempo</title>
+<title>Línea del tiempo - Exhibición</title>
 
 <style>
 body{
@@ -15,14 +15,14 @@ body{
 }
 
 h2{
-  font-size:20px;
+  margin-top:10px;
 }
 
 #board{
   display:flex;
   flex-wrap:wrap;
   justify-content:center;
-  gap:10px;
+  gap:12px;
   margin:10px;
 }
 
@@ -33,10 +33,17 @@ h2{
   border-radius:12px;
   padding:6px;
   cursor:pointer;
+  transition:.3s;
 }
 
 .card.selected{
   border:2px solid gold;
+  transform:scale(1.05);
+}
+
+.card.locked{
+  opacity:.5;
+  pointer-events:none;
 }
 
 .card img{
@@ -53,36 +60,61 @@ h2{
 #timeline{
   display:flex;
   flex-direction:column;
-  gap:10px;
+  gap:12px;
   margin:20px;
 }
 
 .slot{
   width:90%;
-  max-width:300px;
-  height:150px;
+  max-width:320px;
+  height:160px;
   margin:auto;
   border:2px dashed #666;
   border-radius:12px;
   display:flex;
   align-items:center;
   justify-content:center;
+  transition:.3s;
 }
 
-.correct{
-  color:#00ffb3;
-}
-
-.incorrect{
-  color:#ff4d4d;
-}
+.slot.correct{ border-color:#00ffb3; }
+.slot.incorrect{ border-color:#ff4d4d; }
+.slot.active{ border-color:gold; }
 
 button{
   padding:12px;
+  margin:5px;
   font-size:16px;
   background:#d4af37;
   border:none;
   border-radius:8px;
+  cursor:pointer;
+}
+
+#mensaje{
+  font-size:18px;
+  margin-top:10px;
+}
+
+#ficha{
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,.95);
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  padding:20px;
+}
+
+.panel{
+  max-width:500px;
+  background:#1c1c26;
+  padding:20px;
+  border-radius:12px;
 }
 </style>
 </head>
@@ -103,6 +135,14 @@ button{
 </div>
 
 <button onclick="verificar()">Verificar</button>
+<button onclick="reiniciar()">Reiniciar</button>
+
+<div id="mensaje"></div>
+
+<div id="ficha">
+  <div class="panel" id="panelTexto"></div>
+  <button onclick="cerrarFicha()">Cerrar</button>
+</div>
 
 <script>
 
@@ -114,78 +154,132 @@ let data = [
   {img:'img5.jpg', year:'2000', titulo:'50 Aniversario de la Fototeca Nacional'}
 ];
 
-data.sort(()=>Math.random()-0.5);
-
 const board = document.getElementById("board");
 const slots = document.querySelectorAll(".slot");
+const mensaje = document.getElementById("mensaje");
 
-let selected = null;
+let selected=null;
+let timer;
 
-// crear tarjetas
-data.forEach(item=>{
-  let card = document.createElement("div");
-  card.className="card";
-  card.dataset.year=item.year;
+// iniciar
+function iniciar(){
+  board.innerHTML="";
+  slots.forEach(s=>s.innerHTML="");
+  data.sort(()=>Math.random()-0.5);
 
-  card.innerHTML = `
-    <img src="${item.img}">
-    <div class="caption">${item.titulo}</div>
-  `;
+  data.forEach(item=>{
+    let card=document.createElement("div");
+    card.className="card";
+    card.dataset.year=item.year;
 
-  card.addEventListener("click", ()=>{
-    document.querySelectorAll(".card").forEach(c=>c.classList.remove("selected"));
-    card.classList.add("selected");
-    selected = card;
+    card.innerHTML=`<img src="${item.img}"><div class="caption">${item.titulo}</div>`;
+
+    card.onclick=()=>{
+      if(card.classList.contains("locked")) return;
+      document.querySelectorAll(".card").forEach(c=>c.classList.remove("selected"));
+      card.classList.add("selected");
+      selected=card;
+      slots.forEach(s=>s.classList.add("active"));
+    };
+
+    board.appendChild(card);
   });
+}
 
-  board.appendChild(card);
-});
-
-// colocar en slots
 slots.forEach(slot=>{
-  slot.addEventListener("click", ()=>{
-    if(selected && slot.children.length===0){
-      slot.appendChild(selected);
-      selected.classList.remove("selected");
-      selected = null;
+  slot.onclick=()=>{
+    if(!selected) return;
+
+    if(slot.firstChild && !slot.firstChild.classList.contains("locked")){
+      board.appendChild(slot.firstChild);
     }
-  });
+
+    slot.appendChild(selected);
+    selected.classList.remove("selected");
+    selected=null;
+    slots.forEach(s=>s.classList.remove("active"));
+    resetTimer();
+  };
 });
 
-// 🔥 VALIDACIÓN CORRECTA
 function verificar(){
 
-  let cards = Array.from(slots).map(s=>s.querySelector(".card"));
+  let cards=[...slots].map(s=>s.querySelector(".card"));
 
-  // 🚨 si faltan piezas → error
   if(cards.includes(null)){
-    alert("⚠️ Coloca todas las imágenes primero");
+    mensaje.innerHTML="⚠️ Completa todos los espacios";
     return;
   }
 
-  let years = cards.map(c=>parseInt(c.dataset.year));
-
-  let correct = true;
+  let years=cards.map(c=>parseInt(c.dataset.year));
+  let ok=true;
 
   for(let i=0;i<years.length-1;i++){
-    if(years[i] > years[i+1]){
-      correct = false;
-    }
+    if(years[i]>years[i+1]) ok=false;
   }
 
   slots.forEach((s,i)=>{
-    let card = s.querySelector(".card");
+    let c=s.querySelector(".card");
+    s.classList.remove("correct","incorrect");
 
-    card.classList.remove("correct","incorrect");
-    card.classList.add(correct ? "correct" : "incorrect");
-
-    if(correct){
-      card.querySelector(".caption").innerHTML = card.dataset.year;
+    if(i===0 || years[i]>=years[i-1]){
+      s.classList.add("correct");
+      c.classList.add("locked");
+    }else{
+      s.classList.add("incorrect");
     }
   });
 
-  alert(correct ? "🎉 ¡Correcto!" : "❌ Intenta nuevamente");
+  if(ok){
+    mensaje.innerHTML="🎉 ¡Línea del tiempo completada!";
+    mostrarFicha();
+    slots.forEach(s=>{
+      let c=s.querySelector(".caption");
+      let card=s.querySelector(".card");
+      c.innerHTML=card.dataset.year;
+    });
+  }else{
+    mensaje.innerHTML="❌ Revisa los elementos marcados";
+  }
 }
+
+// ficha museo
+function mostrarFicha(){
+  let panel=document.getElementById("panelTexto");
+  panel.innerHTML=`
+    <h3>Historia del Exconvento</h3>
+    <p>El Exconvento de San Francisco ha tenido múltiples usos a lo largo del tiempo,
+    desde hospital municipal hasta espacio cultural, albergando hoy la Fototeca Nacional
+    y el Museo de la Fotografía.</p>
+  `;
+  document.getElementById("ficha").style.display="flex";
+}
+
+function cerrarFicha(){
+  document.getElementById("ficha").style.display="none";
+}
+
+// reinicio
+function reiniciar(){
+  iniciar();
+  mensaje.innerHTML="";
+}
+
+// ⏳ modo atracción (reinicio automático)
+function resetTimer(){
+  clearTimeout(timer);
+  timer=setTimeout(reiniciar,60000);
+}
+
+// pantalla completa automática
+document.body.onclick=()=>{
+  if(document.documentElement.requestFullscreen){
+    document.documentElement.requestFullscreen();
+  }
+};
+
+iniciar();
+resetTimer();
 
 </script>
 
