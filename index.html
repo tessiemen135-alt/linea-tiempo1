@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Exposición con feedback</title>
+<title>Línea del tiempo - Exconvento</title>
 
 <style>
 body{
@@ -12,10 +12,6 @@ body{
   color:#f5f5f5;
   text-align:center;
   margin:0;
-}
-
-h2{
-  font-size:22px;
 }
 
 #board{
@@ -109,13 +105,13 @@ button{
 
 <script>
 
-// 🔥 DATOS (tus títulos originales)
+// 🔥 DATOS REALES (los tuyos)
 let data = [
-  {img:'img1.jpg', year:'1861', titulo:'Inicio del Exconvento'},
-  {img:'img2.jpg', year:'1880', titulo:'Expansión del complejo'},
-  {img:'img3.jpg', year:'1976', titulo:'Restauración'},
-  {img:'img4.jpeg', year:'1984', titulo:'Apertura cultural'},
-  {img:'img5.jpg', year:'2000', titulo:'Uso contemporáneo'}
+  {img:'img1.jpg', year:'1861', titulo:'Exconvento como hospital municipal y otros usos estatales'},
+  {img:'img2.jpg', year:'1880', titulo:'Fotografía del exconvento de Alfred Briquet'},
+  {img:'img3.jpg', year:'1976', titulo:'Fundación de la Fototeca Nacional (planta alta)'},
+  {img:'img4.jpeg', year:'1984', titulo:'Apertura del Museo de la Fotografía de la Fototeca Nacional'},
+  {img:'img5.jpg', year:'2000', titulo:'50 Aniversario de la Fototeca Nacional'}
 ];
 
 // mezclar
@@ -137,7 +133,7 @@ data.forEach(item=>{
     <div class="caption">${item.titulo}</div>
   `;
 
-  // 📱 selección táctil
+  // 📱 seleccionar con toque
   card.addEventListener("click", ()=>{
     document.querySelectorAll(".card").forEach(c=>c.classList.remove("selected"));
     card.classList.add("selected");
@@ -157,7 +153,7 @@ data.forEach(item=>{
 // slots
 slots.forEach(slot=>{
 
-  // drag (computadora)
+  // drag
   slot.addEventListener("dragover", e=>e.preventDefault());
 
   slot.addEventListener("drop", e=>{
@@ -169,7 +165,7 @@ slots.forEach(slot=>{
     activarEventos(slot.firstChild);
   });
 
-  // touch (celular)
+  // touch
   slot.addEventListener("click", ()=>{
     if(selected && slot.children.length===0){
       slot.appendChild(selected);
@@ -180,7 +176,7 @@ slots.forEach(slot=>{
 
 });
 
-// reactivar eventos después de mover
+// reactivar eventos
 function activarEventos(card){
 
   card.addEventListener("click", ()=>{
@@ -218,13 +214,14 @@ function verificar(){
       card.classList.remove("correct","incorrect");
       card.classList.add(correct ? "correct" : "incorrect");
 
+      // mostrar años SOLO si está correcto
       if(correct){
         card.querySelector(".caption").innerHTML = card.dataset.year;
       }
     }
   });
 
-  alert(correct ? "🎉 ¡Correcto!" : "❌ Intenta otra vez");
+  alert(correct ? "🎉 ¡Correcto!" : "❌ Intenta nuevamente");
 }
 
 </script>
