@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Exposición con feedback</title>
 
 <style>
@@ -13,49 +14,59 @@ body{
   margin:0;
 }
 
+h2{
+  font-size:22px;
+}
+
 #board{
   display:flex;
+  flex-wrap:wrap;
   justify-content:center;
-  gap:20px;
-  margin:20px;
+  gap:12px;
+  margin:15px;
 }
 
 .card{
-  width:180px;
+  width:140px;
   background:#1c1c26;
   border-radius:12px;
-  padding:10px;
-  cursor:grab;
+  padding:8px;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.card.selected{
+  border:2px solid gold;
 }
 
 .card img{
   width:100%;
-  height:130px;
+  height:100px;
   object-fit:cover;
-  border-radius:10px;
+  border-radius:8px;
 }
 
 .caption{
-  margin-top:6px;
-  font-size:14px;
-  transition:0.3s;
+  margin-top:5px;
+  font-size:12px;
+}
+
+#timeline{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:12px;
+  margin:20px;
 }
 
 .slot{
-  width:180px;
-  height:220px;
+  width:140px;
+  height:160px;
   border:2px dashed #666;
   border-radius:12px;
   display:flex;
   align-items:center;
   justify-content:center;
-}
-
-#timeline{
-  display:flex;
-  justify-content:center;
-  gap:20px;
-  margin:30px;
 }
 
 .correct{
@@ -74,6 +85,7 @@ button{
   background:#d4af37;
   color:black;
   cursor:pointer;
+  font-size:16px;
 }
 </style>
 </head>
@@ -97,7 +109,7 @@ button{
 
 <script>
 
-// 🔥 TUS DATOS (títulos originales intactos)
+// 🔥 DATOS (tus títulos originales)
 let data = [
   {img:'img1.jpg', year:'1861', titulo:'Inicio del Exconvento'},
   {img:'img2.jpg', year:'1880', titulo:'Expansión del complejo'},
@@ -112,21 +124,29 @@ data.sort(()=>Math.random()-0.5);
 const board = document.getElementById("board");
 const slots = document.querySelectorAll(".slot");
 
+let selected = null;
+
 // crear tarjetas
 data.forEach(item=>{
   let card = document.createElement("div");
   card.className="card";
-  card.draggable=true;
   card.dataset.year=item.year;
-  card.dataset.titulo=item.titulo;
 
   card.innerHTML = `
     <img src="${item.img}">
     <div class="caption">${item.titulo}</div>
   `;
 
+  // 📱 selección táctil
+  card.addEventListener("click", ()=>{
+    document.querySelectorAll(".card").forEach(c=>c.classList.remove("selected"));
+    card.classList.add("selected");
+    selected = card;
+  });
+
+  // 💻 drag
+  card.draggable=true;
   card.addEventListener("dragstart", e=>{
-    e.dataTransfer.setData("year", card.dataset.year);
     e.dataTransfer.setData("html", card.outerHTML);
     setTimeout(()=>card.remove(),0);
   });
@@ -136,34 +156,55 @@ data.forEach(item=>{
 
 // slots
 slots.forEach(slot=>{
+
+  // drag (computadora)
   slot.addEventListener("dragover", e=>e.preventDefault());
 
   slot.addEventListener("drop", e=>{
     e.preventDefault();
-
-    if(slot.children.length > 0) return;
+    if(slot.children.length>0) return;
 
     let html = e.dataTransfer.getData("html");
     slot.innerHTML = html;
-
-    let newCard = slot.firstChild;
-
-    newCard.addEventListener("dragstart", ev=>{
-      ev.dataTransfer.setData("year", newCard.dataset.year);
-      ev.dataTransfer.setData("html", newCard.outerHTML);
-      setTimeout(()=>newCard.remove(),0);
-    });
+    activarEventos(slot.firstChild);
   });
+
+  // touch (celular)
+  slot.addEventListener("click", ()=>{
+    if(selected && slot.children.length===0){
+      slot.appendChild(selected);
+      selected.classList.remove("selected");
+      selected = null;
+    }
+  });
+
 });
+
+// reactivar eventos después de mover
+function activarEventos(card){
+
+  card.addEventListener("click", ()=>{
+    document.querySelectorAll(".card").forEach(c=>c.classList.remove("selected"));
+    card.classList.add("selected");
+    selected = card;
+  });
+
+  card.draggable=true;
+  card.addEventListener("dragstart", e=>{
+    e.dataTransfer.setData("html", card.outerHTML);
+    setTimeout(()=>card.remove(),0);
+  });
+}
 
 // verificar
 function verificar(){
-  let correct = true;
 
   let orden = Array.from(slots).map(s=>{
     let card = s.querySelector(".card");
     return card ? parseInt(card.dataset.year) : 0;
   });
+
+  let correct = true;
 
   for(let i=0;i<orden.length-1;i++){
     if(orden[i] > orden[i+1]){
@@ -177,19 +218,13 @@ function verificar(){
       card.classList.remove("correct","incorrect");
       card.classList.add(correct ? "correct" : "incorrect");
 
-      // 🔥 SOLO SI ESTÁ CORRECTO → mostrar años
       if(correct){
-        let caption = card.querySelector(".caption");
-        caption.innerHTML = card.dataset.year;
+        card.querySelector(".caption").innerHTML = card.dataset.year;
       }
     }
   });
 
-  if(correct){
-    alert("🎉 ¡Correcto! Has ordenado la línea del tiempo");
-  } else {
-    alert("❌ Intenta nuevamente");
-  }
+  alert(correct ? "🎉 ¡Correcto!" : "❌ Intenta otra vez");
 }
 
 </script>
