@@ -37,6 +37,7 @@ body{
 
 .caption{
   margin-top:6px;
+  font-size:14px;
 }
 
 .slot{
@@ -79,7 +80,7 @@ button{
 <body>
 
 <h2>🕰️ Exconvento de San Francisco</h2>
-<p>Ordena los títulos con sus imágenes en orden cronológico</p>
+<p>Ordena las imágenes en orden cronológico</p>
 
 <div id="board"></div>
 
@@ -95,23 +96,23 @@ button{
 
 <script>
 
-// 🔥 DATOS (usa tus imágenes reales)
+// 🔥 DATOS (sin mostrar años al inicio)
 let data = [
-  {img:'img1.jpg', year:'1861'},
-  {img:'img2.jpg', year:'1880'},
-  {img:'img3.jpg', year:'1976'},
-  {img:'img4.jpeg', year:'1984'},
-  {img:'img5.jpg', year:'2000'}
+  {img:'img1.jpg', year:'1861', titulo:'Inicio del Exconvento'},
+  {img:'img2.jpg', year:'1880', titulo:'Expansión del complejo'},
+  {img:'img3.jpg', year:'1976', titulo:'Restauración'},
+  {img:'img4.jpeg', year:'1984', titulo:'Apertura cultural'},
+  {img:'img5.jpg', year:'2000', titulo:'Uso contemporáneo'}
 ];
 
-// MEZCLAR
+// mezclar
 data.sort(()=>Math.random()-0.5);
 
 const board = document.getElementById("board");
 const slots = document.querySelectorAll(".slot");
 
-// CREAR TARJETAS
-data.forEach((item,i)=>{
+// crear tarjetas
+data.forEach(item=>{
   let card = document.createElement("div");
   card.className="card";
   card.draggable=true;
@@ -119,11 +120,11 @@ data.forEach((item,i)=>{
 
   card.innerHTML = `
     <img src="${item.img}">
-    <div class="caption">${item.year}</div>
+    <div class="caption">${item.titulo}</div>
   `;
 
   card.addEventListener("dragstart", e=>{
-    e.dataTransfer.setData("text", card.dataset.year);
+    e.dataTransfer.setData("year", card.dataset.year);
     e.dataTransfer.setData("html", card.outerHTML);
     setTimeout(()=>card.remove(),0);
   });
@@ -131,7 +132,7 @@ data.forEach((item,i)=>{
   board.appendChild(card);
 });
 
-// SLOTS
+// slots
 slots.forEach(slot=>{
   slot.addEventListener("dragover", e=>e.preventDefault());
 
@@ -146,14 +147,14 @@ slots.forEach(slot=>{
     let newCard = slot.firstChild;
 
     newCard.addEventListener("dragstart", ev=>{
-      ev.dataTransfer.setData("text", newCard.dataset.year);
+      ev.dataTransfer.setData("year", newCard.dataset.year);
       ev.dataTransfer.setData("html", newCard.outerHTML);
       setTimeout(()=>newCard.remove(),0);
     });
   });
 });
 
-// VERIFICAR
+// verificar
 function verificar(){
   let correct = true;
 
@@ -173,13 +174,19 @@ function verificar(){
     if(card){
       card.classList.remove("correct","incorrect");
       card.classList.add(correct ? "correct" : "incorrect");
+
+      // 🔥 SOLO SI ESTÁ CORRECTO → mostrar año
+      if(correct){
+        let caption = card.querySelector(".caption");
+        caption.innerHTML = card.dataset.year;
+      }
     }
   });
 
   if(correct){
-    alert("🎉 ¡Correcto!");
+    alert("🎉 ¡Correcto! Has ordenado la línea del tiempo");
   } else {
-    alert("❌ Intenta otra vez");
+    alert("❌ Intenta nuevamente");
   }
 }
 
