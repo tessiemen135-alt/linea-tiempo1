@@ -23,6 +23,7 @@ body{
   width:45%;
   background:#1c1c26;
   padding:8px;
+  border-radius:10px;
 }
 
 .card.selected{
@@ -35,16 +36,30 @@ body{
   object-fit:cover;
 }
 
+button.sel{
+  margin-top:5px;
+  padding:5px;
+  background:gold;
+  border:none;
+  border-radius:5px;
+}
+
 #timeline{
   display:flex;
   flex-direction:column;
   gap:10px;
+  margin-top:15px;
 }
 
 .slot{
   height:140px;
   border:2px dashed #666;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
+
 </style>
 </head>
 
@@ -79,16 +94,22 @@ data.sort(()=>Math.random()-0.5);
 const board = document.getElementById("board");
 const slots = document.querySelectorAll(".slot");
 
-let selected=null;
+let selected = null;
 
+// crear tarjetas
 data.forEach(item=>{
   let card=document.createElement("div");
   card.className="card";
   card.dataset.year=item.year;
 
-  card.innerHTML=`<img src="${item.img}"><p>${item.titulo}</p>`;
+  card.innerHTML=`
+    <img src="${item.img}">
+    <p>${item.titulo}</p>
+    <button class="sel">Seleccionar</button>
+  `;
 
-  card.onclick=()=>{
+  // botón seleccionar (más preciso)
+  card.querySelector(".sel").onclick=()=>{
     document.querySelectorAll(".card").forEach(c=>c.classList.remove("selected"));
     card.classList.add("selected");
     selected=card;
@@ -97,8 +118,10 @@ data.forEach(item=>{
   board.appendChild(card);
 });
 
+// colocar en slot
 slots.forEach(slot=>{
   slot.onclick=()=>{
+
     if(!selected) return;
 
     if(slot.firstChild){
@@ -117,6 +140,11 @@ function verificar(){
     let c=s.querySelector(".card");
     return c?parseInt(c.dataset.year):0;
   });
+
+  if(orden.includes(0)){
+    alert("Coloca todas las imágenes");
+    return;
+  }
 
   for(let i=0;i<orden.length-1;i++){
     if(orden[i]>orden[i+1]){
