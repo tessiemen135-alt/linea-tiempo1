@@ -10,6 +10,13 @@ body{
   background:#0b0b0f;
   color:white;
   text-align:center;
+  margin:0;
+}
+
+/* 🔥 BLOQUEA interacción rara del navegador */
+img {
+  pointer-events:none;
+  -webkit-user-drag: none;
 }
 
 #board{
@@ -36,14 +43,6 @@ body{
   object-fit:cover;
 }
 
-button.sel{
-  margin-top:5px;
-  padding:5px;
-  background:gold;
-  border:none;
-  border-radius:5px;
-}
-
 #timeline{
   display:flex;
   flex-direction:column;
@@ -60,12 +59,17 @@ button.sel{
   justify-content:center;
 }
 
+.slot.active{
+  border-color:gold;
+}
+
 </style>
 </head>
 
 <body>
 
 <h2>Ordena cronológicamente</h2>
+<p>Toca una imagen y luego toca un recuadro</p>
 
 <div id="board"></div>
 
@@ -105,22 +109,22 @@ data.forEach(item=>{
   card.innerHTML=`
     <img src="${item.img}">
     <p>${item.titulo}</p>
-    <button class="sel">Seleccionar</button>
   `;
 
-  // botón seleccionar (más preciso)
-  card.querySelector(".sel").onclick=()=>{
+  card.addEventListener("click", ()=>{
     document.querySelectorAll(".card").forEach(c=>c.classList.remove("selected"));
     card.classList.add("selected");
     selected=card;
-  };
+
+    slots.forEach(s=>s.classList.add("active"));
+  });
 
   board.appendChild(card);
 });
 
-// colocar en slot
+// slots
 slots.forEach(slot=>{
-  slot.onclick=()=>{
+  slot.addEventListener("click", ()=>{
 
     if(!selected) return;
 
@@ -131,8 +135,13 @@ slots.forEach(slot=>{
     slot.appendChild(selected);
     selected.classList.remove("selected");
     selected=null;
-  };
+
+    slots.forEach(s=>s.classList.remove("active"));
+  });
 });
+
+// evitar menú largo en móvil
+document.addEventListener("contextmenu", e=>e.preventDefault());
 
 function verificar(){
 
