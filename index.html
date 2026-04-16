@@ -33,6 +33,10 @@ body{
   object-fit:cover;
 }
 
+.caption{
+  margin-top:5px;
+}
+
 #timeline{
   display:flex;
   justify-content:center;
@@ -43,13 +47,26 @@ body{
   width:180px;
   height:220px;
   border:2px dashed #666;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* 🔥 feedback */
+.correct{
+  border-color:#00ffb3 !important;
+}
+
+.incorrect{
+  border-color:#ff4d4d !important;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Ordena cronológicamente</h2>
+<h2>🕰️ Ordena cronológicamente</h2>
 
 <div id="board"></div>
 
@@ -78,6 +95,7 @@ data.sort(()=>Math.random()-0.5);
 const board = document.getElementById("board");
 const slots = document.querySelectorAll(".slot");
 
+// crear tarjetas
 data.forEach(item=>{
   let card = document.createElement("div");
   card.className="card";
@@ -86,11 +104,10 @@ data.forEach(item=>{
 
   card.innerHTML = `
     <img src="${item.img}">
-    <p>${item.titulo}</p>
+    <div class="caption">${item.titulo}</div>
   `;
 
   card.ondragstart = e=>{
-    e.dataTransfer.setData("id", item.year);
     e.dataTransfer.setData("html", card.outerHTML);
     setTimeout(()=>card.remove(),0);
   };
@@ -98,6 +115,7 @@ data.forEach(item=>{
   board.appendChild(card);
 });
 
+// slots
 slots.forEach(slot=>{
   slot.ondragover = e=>e.preventDefault();
 
@@ -108,24 +126,73 @@ slots.forEach(slot=>{
 
     let html = e.dataTransfer.getData("html");
     slot.innerHTML = html;
+
+    activarDrag(slot.firstChild);
   };
 });
 
+// reactivar drag
+function activarDrag(card){
+  card.draggable=true;
+
+  card.ondragstart = e=>{
+    e.dataTransfer.setData("html", card.outerHTML);
+    setTimeout(()=>card.remove(),0);
+  };
+}
+
+// 🔥 VERIFICACIÓN CON FEEDBACK
 function verificar(){
 
-  let orden = [...slots].map(s=>{
-    let c = s.querySelector(".card");
-    return c ? parseInt(c.dataset.year) : 0;
+  let cards = [...slots].map(s=>s.querySelector(".card"));
+
+  // evitar validar incompleto
+  if(cards.includes(null)){
+    alert("Coloca todas las imágenes");
+    return;
+  }
+
+  let years = cards.map(c=>parseInt(c.dataset.year));
+
+  let allCorrect = true;
+
+  // limpiar estilos
+  slots.forEach(s=>{
+    s.classList.remove("correct","incorrect");
   });
 
-  for(let i=0;i<orden.length-1;i++){
-    if(orden[i] > orden[i+1]){
-      alert("Incorrecto");
-      return;
+  // validar cada posición
+  for(let i=0;i<years.length;i++){
+
+    let prev = years[i-1];
+    let current = years[i];
+    let next = years[i+1];
+
+    let correcto = true;
+
+    if(prev !== undefined && current < prev) correcto = false;
+    if(next !== undefined && current > next) correcto = false;
+
+    if(correcto){
+      slots[i].classList.add("correct");
+    }else{
+      slots[i].classList.add("incorrect");
+      allCorrect = false;
     }
   }
 
-  alert("Correcto 🎉");
+  // 🎉 si todo correcto → mostrar años
+  if(allCorrect){
+    slots.forEach(s=>{
+      let card = s.querySelector(".card");
+      let caption = card.querySelector(".caption");
+      caption.innerHTML = card.dataset.year;
+    });
+
+    alert("🎉 ¡Correcto!");
+  }else{
+    alert("❌ Revisa las posiciones");
+  }
 }
 
 </script>
