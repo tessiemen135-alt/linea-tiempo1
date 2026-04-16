@@ -125,7 +125,7 @@ button{
 
 <script>
 
-// 📱 detectar dispositivo
+// detectar dispositivo
 const esMovil = /Mobi|Android|iPhone/i.test(navigator.userAgent);
 
 document.getElementById("instruccion").innerText =
@@ -133,13 +133,13 @@ document.getElementById("instruccion").innerText =
   ? "📱 Toca una imagen y luego toca un recuadro para colocarla"
   : "🖥️ Arrastra la imagen con el mouse y suéltala en un recuadro";
 
-// datos
+// datos (🔧 CORREGIDO AQUÍ)
 let data = [
   {img:'img1.jpg', year:1861, titulo:'Exconvento como hospital municipal y otros usos estatales'},
   {img:'img2.jpg', year:1880, titulo:'Fotografía del exconvento de Alfred Briquet'},
   {img:'img3.jpg', year:1976, titulo:'Fundación de la Fototeca Nacional (planta alta)'},
   {img:'img4.jpeg', year:1984, titulo:'Apertura del Museo de la Fotografía de la Fototeca Nacional'},
-  {img:'img5.jpg', year:2000, titulo:'50 Aniversario de la Fototeca Nacional'}
+  {img:'img5.jpg', year:2026, titulo:'50 Aniversario de la Fototeca Nacional'}
 ];
 
 data.sort(()=>Math.random()-0.5);
@@ -161,7 +161,7 @@ data.forEach(item=>{
     <div class="caption">${item.titulo}</div>
   `;
 
-  // 📱 tap
+  // móvil
   card.addEventListener("click", ()=>{
     if(!esMovil) return;
 
@@ -171,7 +171,7 @@ data.forEach(item=>{
     slots.forEach(s=>s.classList.add("active"));
   });
 
-  // 🖥️ drag
+  // desktop drag
   card.draggable = true;
 
   card.addEventListener("dragstart", ()=>{
@@ -188,7 +188,6 @@ data.forEach(item=>{
 // slots
 slots.forEach(slot=>{
 
-  // 🖥️ drag
   slot.addEventListener("dragover", e=>e.preventDefault());
 
   slot.addEventListener("drop", e=>{
@@ -204,7 +203,6 @@ slots.forEach(slot=>{
     slot.appendChild(card);
   });
 
-  // 📱 touch
   slot.addEventListener("click", ()=>{
     if(!esMovil || !selected) return;
 
