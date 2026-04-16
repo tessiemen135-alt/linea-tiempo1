@@ -13,12 +13,6 @@ body{
   margin:0;
 }
 
-/* 🔥 BLOQUEA interacción rara del navegador */
-img {
-  pointer-events:none;
-  -webkit-user-drag: none;
-}
-
 #board{
   display:flex;
   flex-wrap:wrap;
@@ -43,6 +37,23 @@ img {
   object-fit:cover;
 }
 
+button{
+  margin-top:5px;
+  padding:6px;
+  width:100%;
+  border:none;
+  border-radius:6px;
+}
+
+.btn-select{
+  background:gold;
+}
+
+.btn-remove{
+  background:#ff4d4d;
+  color:white;
+}
+
 #timeline{
   display:flex;
   flex-direction:column;
@@ -51,25 +62,21 @@ img {
 }
 
 .slot{
-  height:140px;
+  height:150px;
   border:2px dashed #666;
   border-radius:10px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  padding:5px;
 }
 
-.slot.active{
-  border-color:gold;
-}
+.correct{ border-color:#00ffb3; }
+.incorrect{ border-color:#ff4d4d; }
 
 </style>
 </head>
 
 <body>
 
-<h2>Ordena cronológicamente</h2>
-<p>Toca una imagen y luego toca un recuadro</p>
+<h2>🕰️ Ordena cronológicamente</h2>
 
 <div id="board"></div>
 
@@ -109,22 +116,21 @@ data.forEach(item=>{
   card.innerHTML=`
     <img src="${item.img}">
     <p>${item.titulo}</p>
+    <button class="btn-select">Elegir</button>
   `;
 
-  card.addEventListener("click", ()=>{
+  card.querySelector(".btn-select").onclick=()=>{
     document.querySelectorAll(".card").forEach(c=>c.classList.remove("selected"));
     card.classList.add("selected");
     selected=card;
-
-    slots.forEach(s=>s.classList.add("active"));
-  });
+  };
 
   board.appendChild(card);
 });
 
-// slots
+// colocar
 slots.forEach(slot=>{
-  slot.addEventListener("click", ()=>{
+  slot.onclick=()=>{
 
     if(!selected) return;
 
@@ -132,37 +138,65 @@ slots.forEach(slot=>{
       board.appendChild(slot.firstChild);
     }
 
-    slot.appendChild(selected);
-    selected.classList.remove("selected");
+    let card = selected;
     selected=null;
 
-    slots.forEach(s=>s.classList.remove("active"));
-  });
+    // botón quitar
+    let removeBtn = document.createElement("button");
+    removeBtn.innerText="Quitar";
+    removeBtn.className="btn-remove";
+
+    removeBtn.onclick=(e)=>{
+      e.stopPropagation();
+      board.appendChild(card);
+      removeBtn.remove();
+    };
+
+    slot.innerHTML="";
+    slot.appendChild(card);
+    slot.appendChild(removeBtn);
+
+    document.querySelectorAll(".card").forEach(c=>c.classList.remove("selected"));
+  };
 });
 
-// evitar menú largo en móvil
-document.addEventListener("contextmenu", e=>e.preventDefault());
-
+// verificar
 function verificar(){
 
-  let orden=[...slots].map(s=>{
-    let c=s.querySelector(".card");
-    return c?parseInt(c.dataset.year):0;
-  });
+  let cards=[...slots].map(s=>s.querySelector(".card"));
 
-  if(orden.includes(0)){
+  if(cards.includes(null)){
     alert("Coloca todas las imágenes");
     return;
   }
 
-  for(let i=0;i<orden.length-1;i++){
-    if(orden[i]>orden[i+1]){
-      alert("Incorrecto");
-      return;
-    }
-  }
+  let years=cards.map(c=>parseInt(c.dataset.year));
 
-  alert("Correcto 🎉");
+  let allCorrect=true;
+
+  slots.forEach((slot,i)=>{
+    slot.classList.remove("correct","incorrect");
+
+    if(i===0 || years[i]>=years[i-1]){
+      slot.classList.add("correct");
+    }else{
+      slot.classList.add("incorrect");
+      allCorrect=false;
+    }
+  });
+
+  if(allCorrect){
+    slots.forEach(s=>{
+      let c=s.querySelector(".card .caption");
+      if(c){
+        c.innerHTML=s.querySelector(".card").dataset.year;
+      }
+    });
+
+    alert("🎉 ¡Correcto!");
+  }else{
+    alert("❌ Revisa");
+  }
 }
 
 </script>
